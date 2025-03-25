@@ -1,155 +1,104 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predicción de Ventas</title>
-    <link rel="icon" type="image/png" href="ds_logo.png">  <!-- Favicon -->
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
-        img { max-width: 150px; margin-bottom: 10px; }
-        input, button, select { width: 100%; margin: 10px 0; padding: 10px; font-size: 16px; }
-        button { background-color: blue; color: white; font-size: 18px; cursor: pointer; border: none; border-radius: 5px; }
-        #resultado { font-size: 20px; font-weight: bold; margin-top: 20px; color: blue; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Predicción de Ventas</title>
+  <link rel="icon" type="image/png" href="ds_logo.png" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    img {
+      max-width: 150px;
+      margin-bottom: 10px;
+    }
+    input, select, button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      background-color: blue;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+    #resultado {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 20px;
+      color: blue;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <img src="ds_logo.png" alt="Logo DS Market"> <!-- Logo en la parte superior -->
-        <h1>Predicción de Ventas</h1>
-        
-        <label>Selecciona la Fecha:</label>
-        <input type="date" id="datePicker" onchange="actualizarFecha()">
+  <div class="container">
+    <img src="ds_logo.png" alt="Logo DS Market" />
+    <h1>Predicción de Ventas</h1>
 
-        <label>Festivo (0 o 1):</label>
-        <input type="number" id="holidays_boolean" value="0">
+    <label for="item">ID del Producto (item):</label>
+    <input type="text" id="item" placeholder="Ej. FOODS_001">
 
-        <label>Evento (0 o 1):</label>
-        <input type="number" id="event_boolean" value="0">
+    <label for="store">ID de la Tienda (store):</label>
+    <input type="text" id="store" placeholder="Ej. Store_1">
 
-        <label>Lag 1:</label>
-        <input type="number" id="lag_1" value="23350.0">
+    <button onclick="hacerPrediccion()">Predecir</button>
 
-        <label>Lag 7:</label>
-        <input type="number" id="lag_7" value="30599.0">
+    <div id="resultado"></div>
+  </div>
 
-        <label>Lag 14:</label>
-        <input type="number" id="lag_14" value="32225.0">
-
-        <label>Lag 21:</label>
-        <input type="number" id="lag_21" value="31202.0">
-
-        <label>Lag 28:</label>
-        <input type="number" id="lag_28" value="29908.0">
-
-        <label>Lag 1 Incremento:</label>
-        <input type="number" step="0.0001" id="lag_1_inc" value="0.0364">
-
-        <label>Lag 7 Incremento:</label>
-        <input type="number" step="0.0001" id="lag_7_inc" value="-0.0344">
-
-        <label>Lag 14 Incremento:</label>
-        <input type="number" step="0.0001" id="lag_14_inc" value="-0.0749">
-
-        <label>Lag 21 Incremento:</label>
-        <input type="number" step="0.0001" id="lag_21_inc" value="-0.1774">
-
-        <label>Lag 28 Incremento:</label>
-        <input type="number" step="0.0001" id="lag_28_inc" value="-0.0834">
-
-        <button onclick="hacerPrediccion()">Predecir</button>
-
-        <div id="resultado"></div>
-    </div>
-
-    <script>
-        function actualizarFecha() {
-        const date = new Date(document.getElementById("datePicker").value);
-        if (!date.getTime()) return;
-
-        // Calcular valores automáticamente
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        const quarter = Math.ceil(month / 3);
-        const weekday_int = date.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
-
-        // Calcular la semana del año (week)
-        const start = new Date(year, 0, 1);
-        const diff = date - start;
-        const oneDay = 1000 * 60 * 60 * 24;
-        const week = Math.ceil((diff / oneDay + start.getDay() + 1) / 7);
-
-        // Definir w (igual a week si no hay otro criterio)
-        const w = week;  // Si "w" tiene otra lógica, aquí habría que cambiarlo
-
-        // Guardar valores en los atributos del input de fecha
-        document.getElementById("datePicker").dataset.year = year;
-        document.getElementById("datePicker").dataset.month = month;
-        document.getElementById("datePicker").dataset.day = day;
-        document.getElementById("datePicker").dataset.quarter = quarter;
-        document.getElementById("datePicker").dataset.weekday_int = weekday_int;
-        document.getElementById("datePicker").dataset.week = week;
-        document.getElementById("datePicker").dataset.w = w;
-    }
-
+  <script>
     async function hacerPrediccion() {
-        const datePicker = document.getElementById("datePicker");
+      const item = document.getElementById("item").value;
+      const store = document.getElementById("store").value;
 
-        if (!datePicker.dataset.year) {
-            alert("Por favor, selecciona una fecha.");
-            return;
+      if (!item || !store) {
+        alert("Por favor, completa ambos campos.");
+        return;
+      }
+
+      const datos = { item, store };
+      const url = "https://sales-api-1080258621606.europe-west1.run.app/predict";
+
+      try {
+        const respuesta = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(datos)
+        });
+
+        const resultado = await respuesta.json();
+        console.log("Respuesta de la API:", resultado);
+
+        if (resultado.predicted_sales !== undefined) {
+          document.getElementById("resultado").innerText =
+            "Predicción de Ventas: " + resultado.predicted_sales;
+        } else {
+          document.getElementById("resultado").innerText =
+            "Error: Respuesta inesperada de la API";
         }
-
-        const datos = {
-            year: Number(datePicker.dataset.year),
-            month: Number(datePicker.dataset.month),
-            quarter: Number(datePicker.dataset.quarter),
-            week: Number(datePicker.dataset.week),
-            w: Number(datePicker.dataset.w),  // ✅ Ahora enviamos ambos valores
-            day: Number(datePicker.dataset.day),
-            weekday_int: Number(datePicker.dataset.weekday_int),
-            holidays_boolean: Number(document.getElementById("holidays_boolean").value),
-            event_boolean: Number(document.getElementById("event_boolean").value),
-            lag_1: parseFloat(document.getElementById("lag_1").value),
-            lag_7: parseFloat(document.getElementById("lag_7").value),
-            lag_14: parseFloat(document.getElementById("lag_14").value),
-            lag_21: parseFloat(document.getElementById("lag_21").value),
-            lag_28: parseFloat(document.getElementById("lag_28").value),
-            lag_1_inc: parseFloat(document.getElementById("lag_1_inc").value),
-            lag_7_inc: parseFloat(document.getElementById("lag_7_inc").value),
-            lag_14_inc: parseFloat(document.getElementById("lag_14_inc").value),
-            lag_21_inc: parseFloat(document.getElementById("lag_21_inc").value),
-            lag_28_inc: parseFloat(document.getElementById("lag_28_inc").value)
-        };
-
-        console.log("Datos enviados a la API:", datos);  // ✅ Verificar en consola
-
-        const url = "https://sales-api-1080258621606.europe-west1.run.app/predict";
-
-        try {
-            const respuesta = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(datos)
-            });
-
-            const resultado = await respuesta.json();
-            console.log("Respuesta de la API:", resultado);
-
-            if (resultado.predicted_sales !== undefined) {
-                document.getElementById("resultado").innerText = "Predicción de Ventas: " + resultado.predicted_sales;
-            } else {
-                document.getElementById("resultado").innerText = "Error: Respuesta inesperada de la API";
-            }
-        } catch (error) {
-            document.getElementById("resultado").innerText = "Error al obtener la predicción";
-            console.error(error);
-        }
+      } catch (error) {
+        document.getElementById("resultado").innerText =
+          "Error al obtener la predicción";
+        console.error(error);
+      }
     }
-    </script>
-
+  </script>
 </body>
 </html>
