@@ -67,38 +67,40 @@
     async function hacerPrediccion() {
       const item = document.getElementById("item").value;
       const store = document.getElementById("store").value;
-
+  
       if (!item || !store) {
         alert("Por favor, completa ambos campos.");
         return;
       }
-
+  
       const datos = { item, store };
-      const url = "https://sales-api-1080258621606.europe-west1.run.app/predict";
-
+      const url = "http://127.0.0.1:8080/predict"; // <- CORREGIDO
+  
       try {
         const respuesta = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(datos)
         });
-
+  
         const resultado = await respuesta.json();
         console.log("Respuesta de la API:", resultado);
-
+  
         if (resultado.predicted_sales !== undefined) {
           document.getElementById("resultado").innerText =
-            "Predicción de Ventas: " + resultado.predicted_sales;
+            `📦 Predicción para ${resultado.date}: ${resultado.predicted_sales} unidades`;
+        } else if (resultado.error) {
+          document.getElementById("resultado").innerText = "⚠️ " + resultado.error;
         } else {
           document.getElementById("resultado").innerText =
-            "Error: Respuesta inesperada de la API";
+            "⚠️ Respuesta inesperada de la API.";
         }
       } catch (error) {
         document.getElementById("resultado").innerText =
-          "Error al obtener la predicción";
+          "❌ Error al obtener la predicción. ¿Está corriendo la API?";
         console.error(error);
       }
     }
-  </script>
+  </script>  
 </body>
 </html>
