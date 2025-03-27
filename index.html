@@ -195,7 +195,7 @@
         if (resultado.predictions) {
           let html = `<h3>📊 Predicciones para ${item} en ${store}</h3><ul>`;
           resultado.predictions.forEach(p => {
-            html += `<li><strong>${p.date}</strong>: ${p.predicted_sales} unidades</li>`;
+            html += `<li><strong>${p.date}</strong>: ${Math.round(p.predicted_sales)} ud</li>`;
           });
           html += "</ul>";
           contenedor.innerHTML = html;
