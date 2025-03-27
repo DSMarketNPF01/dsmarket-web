@@ -6,30 +6,42 @@
   <title>Predicción de Ventas</title>
   <link rel="icon" type="image/png" href="ds_logo.png" />
   <style>
-    body {
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
       font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
+
+    body {
+      flex-direction: column;
+    }
+
     .container {
       max-width: 400px;
-      margin: auto;
       background: white;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
+
     img {
       max-width: 150px;
-      margin-bottom: 10px;
+      margin: 0 auto 10px auto;
+      display: block;
     }
-    input, select, button {
+
+    select, button {
       width: 100%;
       margin: 10px 0;
       padding: 10px;
       font-size: 16px;
     }
+
     button {
       background-color: blue;
       color: white;
@@ -38,25 +50,63 @@
       border: none;
       border-radius: 5px;
     }
+
+    #loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 100vw;
+      background-color: white;
+      z-index: 999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
     #resultado {
-      font-size: 20px;
-      font-weight: bold;
+      font-size: 16px;
       margin-top: 20px;
-      color: blue;
+      color: #333;
+      text-align: left;
+    }
+
+    #resultado ul {
+      padding-left: 20px;
+    }
+
+    #resultado li {
+      margin-bottom: 5px;
     }
   </style>
 </head>
 <body>
 
+  <!-- Pantalla de carga -->
+  <div id="loading-screen">
+    <img src="loading.gif" alt="Cargando..." style="width: 100px; height: 100px;" />
+    <p style="font-size: 20px;">Generando predicciones...</p>
+  </div>
+
   <div class="container">
     <img src="ds_logo.png" alt="Logo DS Market" />
     <h1>Predicción de Ventas</h1>
 
-    <label for="item">ID del Producto (item):</label>
-    <input type="text" id="item" placeholder="Ej. FOODS_001">
+    <label for="store">Selecciona una tienda:</label>
+    <select id="store" onchange="cargarDepartamentos()">
+      <option value="">-- Selecciona una tienda --</option>
+    </select>
 
-    <label for="store">ID de la Tienda (store):</label>
-    <input type="text" id="store" placeholder="Ej. Store_1">
+    <label for="dept">Selecciona un departamento:</label>
+    <select id="dept" onchange="cargarItems()">
+      <option value="">-- Selecciona un departamento --</option>
+    </select>
+
+    <label for="item">Selecciona un producto:</label>
+    <select id="item">
+      <option value="">-- Selecciona un producto --</option>
+    </select>
 
     <button onclick="hacerPrediccion()">Predecir</button>
 
@@ -64,43 +114,104 @@
   </div>
 
   <script>
-    async function hacerPrediccion() {
-      const item = document.getElementById("item").value;
+    let estructura = {};
+
+    window.onload = async function () {
+      const res = await fetch("http://127.0.0.1:8080/data/structure");
+      estructura = await res.json();
+
+      const storeSelect = document.getElementById("store");
+      Object.keys(estructura).forEach(store => {
+        const option = document.createElement("option");
+        option.value = store;
+        option.textContent = store;
+        storeSelect.appendChild(option);
+      });
+    };
+
+    function cargarDepartamentos() {
       const store = document.getElementById("store").value;
-  
-      if (!item || !store) {
-        alert("Por favor, completa ambos campos.");
+      const deptSelect = document.getElementById("dept");
+      const itemSelect = document.getElementById("item");
+      deptSelect.innerHTML = '<option value="">-- Selecciona un departamento --</option>';
+      itemSelect.innerHTML = '<option value="">-- Selecciona un producto --</option>';
+
+      if (store && estructura[store]) {
+        Object.keys(estructura[store]).forEach(dept => {
+          const option = document.createElement("option");
+          option.value = dept;
+          option.textContent = dept;
+          deptSelect.appendChild(option);
+        });
+      }
+    }
+
+    function cargarItems() {
+      const store = document.getElementById("store").value;
+      const dept = document.getElementById("dept").value;
+      const itemSelect = document.getElementById("item");
+      itemSelect.innerHTML = '<option value="">-- Selecciona un producto --</option>';
+
+      if (store && dept && estructura[store][dept]) {
+        estructura[store][dept].forEach(item => {
+          const option = document.createElement("option");
+          option.value = item;
+          option.textContent = item;
+          itemSelect.appendChild(option);
+        });
+      }
+    }
+
+    async function hacerPrediccion() {
+      const store = document.getElementById("store").value;
+      const item = document.getElementById("item").value;
+      const contenedor = document.getElementById("resultado");
+      const container = document.querySelector(".container");
+      const loadingScreen = document.getElementById("loading-screen");
+
+      if (!store || !item) {
+        alert("Por favor, selecciona tienda y producto.");
         return;
       }
-  
+
+      contenedor.innerHTML = "";
+      container.style.display = "none";
+      loadingScreen.style.display = "flex";
+
       const datos = { item, store };
-      const url = "http://127.0.0.1:8080/predict"; // <- CORREGIDO
-  
+      const url = "http://127.0.0.1:8080/predict";
+
       try {
         const respuesta = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(datos)
         });
-  
+
         const resultado = await respuesta.json();
-        console.log("Respuesta de la API:", resultado);
-  
-        if (resultado.predicted_sales !== undefined) {
-          document.getElementById("resultado").innerText =
-            `📦 Predicción para ${resultado.date}: ${resultado.predicted_sales} unidades`;
+        loadingScreen.style.display = "none";
+        container.style.display = "block";
+
+        if (resultado.predictions) {
+          let html = `<h3>📊 Predicciones para ${item} en ${store}</h3><ul>`;
+          resultado.predictions.forEach(p => {
+            html += `<li><strong>${p.date}</strong>: ${p.predicted_sales} unidades</li>`;
+          });
+          html += "</ul>";
+          contenedor.innerHTML = html;
         } else if (resultado.error) {
-          document.getElementById("resultado").innerText = "⚠️ " + resultado.error;
+          contenedor.innerText = "⚠️ " + resultado.error;
         } else {
-          document.getElementById("resultado").innerText =
-            "⚠️ Respuesta inesperada de la API.";
+          contenedor.innerText = "⚠️ Respuesta inesperada de la API.";
         }
+
       } catch (error) {
-        document.getElementById("resultado").innerText =
-          "❌ Error al obtener la predicción. ¿Está corriendo la API?";
+        loadingScreen.style.display = "none";
+        container.style.display = "block";
+        contenedor.innerText = "❌ Error al obtener la predicción.";
         console.error(error);
       }
     }
-  </script>  
+  </script>
 </body>
 </html>
