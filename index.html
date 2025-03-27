@@ -117,7 +117,7 @@
     let estructura = {};
 
     window.onload = async function () {
-      const res = await fetch("http://127.0.0.1:8080/data/structure");
+      const res = await fetch("https://sales-api-1080258621606.europe-west1.run.app/data/structure");
       estructura = await res.json();
 
       const storeSelect = document.getElementById("store");
@@ -179,7 +179,7 @@
       loadingScreen.style.display = "flex";
 
       const datos = { item, store };
-      const url = "http://127.0.0.1:8080/predict";
+      const url = "https://sales-api-1080258621606.europe-west1.run.app/predict";
 
       try {
         const respuesta = await fetch(url, {
